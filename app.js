@@ -3,6 +3,7 @@ var app = express();
 var bodyParser = require("body-parser");
 var mongoose = require("mongoose");
 var methodOverride = require("method-override");
+var expressSanitizer = require("express-sanitizer");
 
 //app config
 mongoose.connect("mongodb://localhost/miniBlogApp", {useMongoClient: true});
@@ -10,7 +11,7 @@ app.set("view engine","ejs");
 app.use(express.static("public"));
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(methodOverride("_method"));
-
+app.use(expressSanitizer());
 
 //mongoose/model config
 var blogSchema = new mongoose.Schema({
@@ -47,6 +48,7 @@ app.get("/blogs/new", function(req, res) {
 // create route
 app.post("/blogs", function(req, res) {
   //create blog
+  req.body.blog.body = req.sanitize(req.body.blog.body);
   Blog.create(req.body.blog, function (err, newBlog) {
     if(err) {
       console.log("new");
@@ -86,6 +88,18 @@ app.put("/blogs/:id", function(req, res) {
       res. redirect("/blogs");
     } else {
       res.redirect("/blogs/" + req.params.id);
+    }
+  });
+});
+
+//delete route
+app.delete("/blogs/:id", function (req, res) {
+  //destroy blog
+  Blog.findByIdAndRemove(req.params.id, function(err) {
+    if(err) {
+      res.redirect("/blogs");
+    } else {
+      res.redirect("/blogs");
     }
   });
 });
