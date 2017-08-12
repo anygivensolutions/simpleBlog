@@ -2,13 +2,14 @@ var express = require("express");
 var app = express();
 var bodyParser = require("body-parser");
 var mongoose = require("mongoose");
+var methodOverride = require("method-override");
 
 //app config
 mongoose.connect("mongodb://localhost/miniBlogApp", {useMongoClient: true});
-
 app.set("view engine","ejs");
 app.use(express.static("public"));
 app.use(bodyParser.urlencoded({extended: true}));
+app.use(methodOverride("_method"));
 
 
 //mongoose/model config
@@ -44,9 +45,9 @@ app.get("/blogs/new", function(req, res) {
   res.render("new");
 });
 // create route
-app.post("/blogs", function(req, res){
+app.post("/blogs", function(req, res) {
   //create blog
-  Blog.create(req.body.blog, function(err, newBlog) {
+  Blog.create(req.body.blog, function (err, newBlog) {
     if(err) {
       console.log("new");
     } else {
@@ -55,6 +56,40 @@ app.post("/blogs", function(req, res){
     }
   });
 });
+
+//show route
+app.get("/blogs/:id", function (req, res) {
+  Blog.findById(req.params.id, function (err, foundBlog) {
+    if(err) {
+      res.redirect("/blogs");
+    } else {
+      res.render("show", {blog: foundBlog})
+    }
+  });
+});
+
+//edit route
+app.get("/blogs/:id/edit", function (req, res) {
+  Blog.findById(req.params.id, function (err, foundBlog){
+    if(err) {
+      res.redirect("/blogs");
+    } else {
+      res.render("edit", {blog: foundBlog});
+    }
+  });
+});
+
+//update route
+app.put("/blogs/:id", function(req, res) {
+  Blog.findByIdAndUpdate(req.params.id, req.body.blog, function(err, updateBlog) {
+    if(err) {
+      res. redirect("/blogs");
+    } else {
+      res.redirect("/blogs/" + req.params.id);
+    }
+  });
+});
+
 app.listen(3000, function() {
   console.log("Blog app server running!");
 });
